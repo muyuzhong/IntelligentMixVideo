@@ -158,3 +158,11 @@ git push origin v0.2.0
 仅合并当前版本条目，按版本号降序排列；遇到并发提交最多尝试五次，不强制推送，也不重复插入已有版本。
 目前只接受正式版本（不含 `-beta` / `-rc`），且版本须满足 Windows MSI 的数值限制。
 正式构建仍使用上述未签名安装包配置，代码签名和 macOS 公证需另行接入。
+
+## AppImage 媒体依赖验证
+
+Linux AppImage 启用 `bundle.linux.appimage.bundleMediaFramework`，Ubuntu 构建环境显式安装
+`gstreamer1.0-plugins-base` 与 `gstreamer1.0-plugins-good`。打包后运行
+`bash .github/scripts/check-appimage-media.sh <AppImage路径>`，解包检查 `appsrc/appsink`
+与 `autoaudiosink` 所属插件实际存在；检查失败不上传安装包。
+该检查验证插件打包，不保证 NVIDIA/EGL 渲染兼容或视频播放成功。

@@ -198,3 +198,11 @@ git push origin v0.2.0
 - 发布流程参考：[HydroRoll release.yml](https://github.com/HydroRoll-Team/HydroRoll/blob/main/.github/workflows/release.yml)。
 
 参考项目用于理解实现方式；本项目发布的是 Tauri 客户端安装包，不照搬参考项目的 Python wheel / PyPI 发布目标。
+
+## AppImage 媒体依赖验证
+
+Linux AppImage 启用 `bundle.linux.appimage.bundleMediaFramework`，Ubuntu 构建环境显式安装
+`gstreamer1.0-plugins-base` 与 `gstreamer1.0-plugins-good`。打包后运行
+`bash .github/scripts/check-appimage-media.sh <AppImage路径>`，解包检查 `appsrc/appsink`
+与 `autoaudiosink` 所属插件实际存在；检查失败不上传安装包。
+该检查验证插件打包，不保证 NVIDIA/EGL 渲染兼容或视频播放成功。
