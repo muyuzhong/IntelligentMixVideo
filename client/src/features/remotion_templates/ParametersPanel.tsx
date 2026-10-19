@@ -213,9 +213,9 @@ export function ParametersPanel({
   return (
     <section
       aria-label="模板参数"
-      className="@container min-h-0 overflow-y-auto rounded-xl border bg-card p-4"
+      className="@container flex h-full min-h-0 flex-col bg-surface"
     >
-      <div className="sticky -top-4 z-10 -mx-4 -mt-4 mb-2 space-y-3 border-b bg-card px-4 py-3">
+      <div className="flex min-h-14 shrink-0 items-center border-b border-line px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-medium">
           <SlidersHorizontal className="size-4" />
           模板参数
@@ -236,27 +236,9 @@ export function ParametersPanel({
                       : ""}
           </span>
         </div>
-        {version && !readOnly && (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" disabled={disabled || !dirty || Object.values(invalid).some(Boolean)} onClick={onSave}>
-              保存配置
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={disabled || !dirty}
-              onClick={onDiscard}
-            >
-              撤销修改
-            </Button>
-            {dirty && (
-              <p className="text-xs text-muted-foreground">
-                预览为本地草稿，保存或撤销后可继续对话和复制。
-              </p>
-            )}
-          </div>
-        )}
+
       </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
       {!version ? (
         <p className="py-7 text-center text-sm text-muted-foreground">
           模板生成后，在这里调整文字、颜色和位置。
@@ -299,6 +281,27 @@ export function ParametersPanel({
           </details>
         ))
       )}
+      </div>
+        {version && !readOnly && (
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-3">
+            <Button size="sm" disabled={disabled || !dirty || Object.values(invalid).some(Boolean)} onClick={onSave}>
+              保存配置
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={disabled || !dirty}
+              onClick={onDiscard}
+            >
+              撤销修改
+            </Button>
+            {dirty && (
+              <p className="text-xs text-muted-foreground">
+                预览为本地草稿，保存或撤销后可继续对话和复制。
+              </p>
+            )}
+          </div>
+        )}
     </section>
   );
 }
@@ -314,7 +317,7 @@ function ComposedParameters({version, values, disabled, onChange, onValidity}: {
   const groups = schemaGroups(version.candidate.config_schema.properties ?? {});
   const top = groups.top.filter((field) => values[field.key] !== undefined);
   return <div className="space-y-4 py-3">
-    <p className="text-xs text-muted-foreground">模板参数会在云端模板里逐次摆放修改；保存只检查参数范围，立即生成新版本。布局与时间修改请通过聊天描述。</p>
+    <p className="text-xs text-muted-foreground">调整后保存为新版本。需要修改布局或动画时，请继续描述你的想法。</p>
     {top.length > 0 && <fieldset className="space-y-3">
       <legend className="text-sm font-medium">模板参数</legend>
       <div className="grid gap-4 @min-[420px]:grid-cols-2">

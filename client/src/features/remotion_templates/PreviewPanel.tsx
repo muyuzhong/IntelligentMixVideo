@@ -1,5 +1,5 @@
 /** 隔离预览容器；仅向当前成功版本的 iframe 发送参数与背景直链，清理消息监听和就绪超时。 */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Film, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,94 +137,36 @@ export function PreviewPanel({
       setError(reason instanceof Error ? reason.message : "视频链接无效");
     }
   }
-  const c = version?.spec.composition;
+  const c = version?.spec.composition ?? { width: 1080, height: 1920, fps: 30 };
+  const canvasStyle: CSSProperties = { aspectRatio: `${c.width} / ${c.height}`, width: `min(100cqw, calc(100cqh * ${c.width / c.height}))` };
   return (
-    <section
-      aria-label="实时预览"
-      className="flex min-h-0 min-w-0 flex-col rounded-xl border bg-card p-4"
-    >
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm font-medium">
-        <Film className="size-4" />
-        实时预览
-        {version && (
-          <span className="rounded bg-accent px-1.5 py-0.5 text-[10px] text-primary">
-            V{version.number}
-          </span>
-        )}
-        <span className="ml-auto text-xs font-normal text-muted-foreground">
-          {c ? `${c.width} × ${c.height} · ${c.fps} fps` : "视频背景 + 字效"}
-        </span>
-      </div>
-      <form
-        className="mb-4 flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          load();
-        }}
-      >
-        <Input
-          aria-label="背景视频直链"
-          placeholder="粘贴背景视频直链（可选）"
-          value={link}
-          disabled={pending || rendering}
-          onChange={(event) => setLink(event.target.value)}
-        />
-        <Button type="submit" variant="outline" disabled={pending || rendering}>
-          加载
-        </Button>
-      </form>
-      <div
-        className="relative flex min-h-40 flex-1 items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/40"
-      >
-        {version ? (
-          <iframe
-            ref={frame}
-            title="Remotion 字效播放器"
-            sandbox="allow-scripts"
-            allow="autoplay; fullscreen"
-            allowFullScreen
-            referrerPolicy="no-referrer"
-            className="h-full w-full border-0"
-          />
-        ) : (
-          <div className="px-6 py-12 text-center">
-            <Film className="mx-auto mb-3 size-9 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              你的字效将在这里呈现
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground/70">
-              先在左侧描述想法，再用视频背景查看效果
-            </p>
+    <section aria-label="实时预览" className="flex h-full min-h-0 min-w-0 flex-1 flex-col bg-canvas">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-4 text-[13px] font-medium">
+        <Film className="size-4" /> 预览
+        {version && <span className="rounded bg-brand/10 px-1.5 py-0.5 font-mono text-[10px] text-brand">V{version.number}</span>}
+        <span className="ml-auto font-mono text-[10px] font-normal text-fg-subtle">{c.width} × {c.height} · {c.fps} fps</span>
+      </header>
+      <div className="relative min-h-0 flex-1 bg-[radial-gradient(var(--color-line-strong)_1px,transparent_1px)] bg-size-[18px_18px]">
+        <div className="absolute inset-5 flex items-center justify-center [container-type:size]">
+          <div aria-label="字效画布" className="relative overflow-hidden rounded-xl border border-line-strong bg-surface/70 shadow-pop" style={canvasStyle}>
+            {version ? <iframe ref={frame} title="Remotion 字效播放器" sandbox="allow-scripts" allow="autoplay; fullscreen" allowFullScreen referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full border-0" /> :
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+                <Film className="mb-3 size-7 text-brand/60" />
+                <p className="text-[13px] font-medium">你的字效将在这里呈现</p>
+                <p className="mt-2 text-xs leading-relaxed text-fg-subtle">描述想法，生成后在这里播放、调参并查看效果</p>
+              </div>}
+            {rendering && !error && <div role="status" className="absolute inset-0 flex items-center justify-center gap-2 bg-surface/90 text-xs text-fg-muted"><Spinner />正在渲染预览…</div>}
           </div>
-        )}
-        {rendering && !error && (
-          <div
-            role="status"
-            className="absolute inset-0 flex items-center justify-center gap-2 bg-muted text-sm text-muted-foreground"
-          >
-            <Spinner />
-            正在渲染预览…
-          </div>
-        )}
-      </div>
-      {error && (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <p role="alert" className="text-xs text-destructive">
-            {error}
-          </p>
-          {version && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={pending || rendering}
-              onClick={() => setReload(reload + 1)}
-            >
-              <RotateCcw />
-              重试预览
-            </Button>
-          )}
         </div>
-      )}
+      </div>
+      <div className="shrink-0 border-t border-line bg-surface p-3">
+        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); load(); }}>
+          <Input aria-label="背景视频直链" placeholder="背景视频直链（可选）" value={link} disabled={pending || rendering} onChange={(event) => setLink(event.target.value)} className="h-8 min-w-0 text-xs" />
+          <Button type="submit" size="sm" variant="outline" disabled={pending || rendering}>加载</Button>
+          {background && <Button type="button" size="sm" variant="ghost" disabled={pending || rendering} onClick={() => { setBackground(""); setLink(""); }}>清除背景</Button>}
+        </form>
+        {error && <div className="mt-2 flex items-center justify-between gap-2"><p role="alert" className="text-xs text-danger">{error}</p>{version && <Button variant="ghost" size="sm" disabled={pending || rendering} onClick={() => setReload(reload + 1)}><RotateCcw />重试预览</Button>}</div>}
+      </div>
     </section>
   );
 }
